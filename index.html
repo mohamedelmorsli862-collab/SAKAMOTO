@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sakamoto & Disciples</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;900&display=swap" rel="stylesheet">
+
+<style>
+/* ================= ROOT ================= */
+:root{
+  --gold:#d4af37;
+  --cyan:#7ce7ff;
+  --skin1:#f3e7d8;
+  --skin2:#e8d2b8;
+  --dark:#05060c;
+  --glass:rgba(255,255,255,.08);
+  --border:rgba(255,255,255,.18);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif;}
+body{overflow-x:hidden;position:relative;}
+
+/* ================= WEBGL CANVAS ================= */
+#three-bg{
+  position:fixed;inset:0;z-index:-1;
+}
+
+/* ================= CINEMATIC INTRO ================= */
+#intro-screen{
+  position:fixed;inset:0;background:#0b0f1a;
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;color:#fff;font-size:2rem;text-align:center;
+  opacity:1;transition:opacity 1.5s ease;
+}
+
+/* ================= HERO ================= */
+.elite-hero{min-height:85vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 20px;position:relative;overflow:hidden;}
+.elite-hero-content{max-width:900px;position:relative;z-index:2;}
+.elite-hero h1{font-size:clamp(30px,6vw,52px);color:#2b1c0e;margin-bottom:25px;text-shadow:0 0 30px rgba(255,255,255,.8);}
+.elite-hero p{font-size:18px;line-height:2.1;color:#2a2a2a;}
+
+/* ================= GRID & CARDS ================= */
+.elite-section{padding:90px 6%;position:relative;z-index:1;}
+.elite-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:45px;}
+.elite-card{position:relative;height:440px;border-radius:26px;overflow:hidden;background: rgba(255,255,255,0.12);backdrop-filter: blur(18px) saturate(160%);-webkit-backdrop-filter: blur(18px) saturate(160%);border:1px solid rgba(255,255,255,0.35);box-shadow:0 30px 80px rgba(0,0,0,.35),inset 0 0 40px rgba(255,255,255,.15);animation:breathe 6s ease-in-out infinite;transform-style:preserve-3d;perspective:1200px;opacity:0;transform:translateY(80px) scale(.9);transition:1s cubic-bezier(.22,1,.36,1);}
+.elite-card.show{opacity:1;transform:translateY(0) scale(1);}
+.elite-glow{position:absolute;inset:-4px;border-radius:inherit;background:conic-gradient(from 0deg,transparent,var(--gold),#ff9d00,var(--gold),transparent);filter:blur(22px);opacity:.85;animation:rotateGlow 6s linear infinite;}
+.elite-img{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.18);transition:transform 0.15s linear;}
+.elite-overlay{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,.3), transparent);}
+.elite-info{position:absolute;bottom:25px;padding:0 25px;color:#fff;}
+.elite-rank{font-size:12px;letter-spacing:3px;color:var(--gold);}
+.elite-name{font-size:22px;margin:10px 0;color:#ffe9b3;}
+.elite-desc{font-size:14px;line-height:1.8;opacity:.9;}
+.elite-card.active .elite-img{transform:translateZ(120px) scale(1.35);filter:brightness(1);z-index:5;}
+
+/* ================= FOOTER ================= */
+.footer{text-align:center;padding:35px;font-size:12px;opacity:.6;color:#fff;}
+
+/* ================= ANIMATIONS ================= */
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes rotateGlow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes pageEnter{0%{opacity:0;transform:scale(1.2);filter:blur(25px);}60%{opacity:1;transform:scale(1);filter:blur(6px);}100%{filter:blur(0);}}
+/* delays for cards */
+.elite-card:nth-child(1){transition-delay:.1s;}
+.elite-card:nth-child(2){transition-delay:.3s;}
+.elite-card:nth-child(3){transition-delay:.5s;}
+.elite-card:nth-child(4){transition-delay:.7s;}
+/* ===== FOOTER FIXED & VISIBLE ===== */
+.footer {
+  position: relative; /* خليها فوق الـ page content */
+  z-index: 50; /* أعلى من جميع الطبقات */
+  text-align: center;
+  padding: 35px;
+  font-size: 12px;
+  opacity: 1; /* خليها واضحة */
+  color: #fff;
+  background: rgba(0,0,0,0.4); /* اختياري: شوية شفافية على الخلفية */
+  backdrop-filter: blur(12px); /* effect glass */
+}
+.footer {
+  /* position: fixed; */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  text-align: center;
+  padding: 20px 0;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+</style>
+</head>
+<body>
+
+<!-- 🎬 CINEMATIC INTRO -->
+<div id="intro-screen">
+  🌟 مرحبًا بكم في عالمٍ حيث المعرفة تُصنع، والروح تُصقل 🌟
+</div>
+
+<!-- 🌌 WebGL Background -->
+<div id="three-bg"></div>
+
+<!-- 🌫️ Smoke & Particles -->
+<div class="particles"></div>
+<div class="smoke"></div>
+
+<div class="page-cinematic">
+<section class="elite-hero section-reveal">
+  <div class="elite-hero-content">
+    <h1>🌟 مرحبًا بكم في عالمٍ حيث المعرفة تُصنع، والروح تُصقل 🌟</h1>
+    <p>هنا، حيث يقف المعلّم شامخًا كمنارةٍ لا تنطفئ، وتلتفّ حوله نخبة من التلاميذ.<br>👑 ساكاموتو وتلاميذه يفتحون لكم الأبواب، مرحّبين بكم في كل زمان ومكان.<br>✨ ادخلوا بثقة… فأنتم بين أهل الحكمة.</p>
+  </div>
+</section>
+
+<section class="elite-section section-reveal">
+  <div class="elite-grid">
+    <article class="elite-card">
+      <div class="elite-glow"></div>
+      <div class="elite-img" style="background-image:url('./sakamoto.jfif')"></div>
+      <div class="elite-overlay"></div>
+      <div class="elite-info">
+        <span class="elite-rank">ساكاموتو</span>
+        <h2 class="elite-name">المعلّم</h2>
+        <p class="elite-desc">معلّم الحكمة ومؤسس الطريق، منار المعرفة.</p>
+      </div>
+    </article>
+
+    <article class="elite-card">
+      <div class="elite-glow"></div>
+      <div class="elite-img" style="background-image:url('./gojo.jfif')"></div>
+      <div class="elite-overlay"></div>
+      <div class="elite-info">
+        <span class="elite-rank">غوجو</span>
+        <h2 class="elite-name">التلميذ الأول</h2>
+        <p class="elite-desc">شغوف، لا يعرف اليأس، وأول من حمل الرسالة.</p>
+      </div>
+    </article>
+
+    <article class="elite-card">
+      <div class="elite-glow"></div>
+      <div class="elite-img" style="background-image:url('./ida.jfif')"></div>
+      <div class="elite-overlay"></div>
+      <div class="elite-info">
+        <span class="elite-rank">ايدا</span>
+        <h2 class="elite-name">تلميذ ثاني</h2>
+        <p class="elite-desc">...........</p>
+      </div>
+    </article>
+
+    <article class="elite-card">
+      <div class="elite-glow"></div>
+      <div class="elite-img" style="background-image:url('./toji.jfif')"></div>
+      <div class="elite-overlay"></div>
+      <div class="elite-info">
+        <span class="elite-rank">توجي</span>
+        <h2 class="elite-name">تلميذ ثالث</h2>
+        <p class="elite-desc">توجي أحد تلاميذ الجدد لساكاموتو.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<div class="footer">© SAKAMOTO — Legacy of Knowledge</div>
+</div>
+<div id="three-bg"></div>
+<!-- ===== SCRIPTS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+<script>
+// ================= WEBGL SCENE =================
+const container = document.getElementById("three-bg");
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0b0f1a, 0.0025);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 2000);
+camera.position.z = 600;
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+container.appendChild(renderer.domElement);
+
+// particles
+const particlesCount = 1500;
+const positions = new Float32Array(particlesCount*3);
+for(let i=0;i<particlesCount*3;i++){positions[i]=(Math.random()-0.5)*2000;}
+const geometry = new THREE.BufferGeometry();
+geometry.setAttribute('position', new THREE.BufferAttribute(positions,3));
+const material = new THREE.PointsMaterial({ color:0xffffff, size:2 });
+const points = new THREE.Points(geometry, material);
+scene.add(points);
+
+// resize
+window.addEventListener('resize',()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// animate
+function animate(){
+  requestAnimationFrame(animate);
+  points.rotation.y += 0.0005;
+  camera.position.x = Math.sin(Date.now()*0.0002)*200;
+  camera.position.y = Math.sin(Date.now()*0.0003)*100;
+  camera.lookAt(0,0,0);
+  renderer.render(scene,camera);
+}
+animate();
+
+// ================= SCROLL & CARD REVEAL =================
+document.addEventListener("DOMContentLoaded",()=>{
+  const observer = new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting) entry.target.classList.add("show");
+    });
+  },{threshold:0.15});
+  document.querySelectorAll(".section-reveal,.elite-card").forEach(el=>observer.observe(el));
+
+  window.addEventListener("scroll",()=>{
+    document.querySelectorAll(".elite-card").forEach(card=>{
+      const img=card.querySelector(".elite-img");
+      const rect=card.getBoundingClientRect();
+      const speed=0.08;
+      if(rect.top<window.innerHeight && rect.bottom>0){
+        const offset=(rect.top-window.innerHeight/2)*speed;
+        img.style.transform=`translateY(${offset}px) scale(1.15)`;
+      }
+    });
+    document.body.style.backgroundPositionY=-window.scrollY*0.2+"px";
+  });
+
+  document.querySelectorAll(".elite-card").forEach(card=>{
+    card.addEventListener("mousemove",e=>{
+      const r=card.getBoundingClientRect();
+      const x=e.clientX-r.left;
+      const y=e.clientY-r.top;
+      const rx=((y/r.height)-0.5)*-12;
+      const ry=((x/r.width)-0.5)*12;
+      card.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg) scale(1.04)`;
+    });
+    card.addEventListener("mouseleave",()=>card.style.transform="");
+    card.addEventListener("click",()=>card.classList.toggle("active"));
+  });
+});
+
+// ================= INTRO CINEMATIC =================
+window.addEventListener("load",()=>{
+  const intro=document.getElementById("intro-screen");
+  if(!intro) return;
+  setTimeout(()=>{
+    intro.style.transition="opacity 1.5s ease";
+    intro.style.opacity=0;
+    setTimeout(()=>intro.style.display="none",1500);
+  },3000);
+});
+const sceneLayers = new THREE.Scene();
+sceneLayers.fog = new THREE.FogExp2(0x0b0f1a, 0.0025);
+
+const cameraLayers = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 3000);
+cameraLayers.position.z = 600;
+
+const rendererLayers = new THREE.WebGLRenderer({antialias:true, alpha:true});
+rendererLayers.setSize(window.innerWidth, window.innerHeight);
+document.getElementById('three-bg').appendChild(rendererLayers.domElement);
+
+// Layers
+const layers = [];
+const colors = [0x111111, 0x222222, 0x333355];
+const speed = [0.0002, 0.0005, 0.0008];
+
+for(let i=0;i<3;i++){
+  const count = 800 + i*300;
+  const positions = new Float32Array(count*3);
+  for(let j=0;j<count*3;j++) positions[j]=(Math.random()-0.5)*(2000+ i*500);
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions,3));
+  const mat = new THREE.PointsMaterial({ color: colors[i], size:1+i*0.5, transparent:true, opacity:0.4 + i*0.1 });
+  const pts = new THREE.Points(geom, mat);
+  sceneLayers.add(pts);
+  layers.push({points:pts, speed:speed[i]});
+}
+
+// subtle light beams
+const beamsGeometry = new THREE.ConeGeometry(200,1000,32,1,true);
+const beamsMaterial = new THREE.MeshBasicMaterial({color:0x7ce7ff, transparent:true, opacity:0.06, side:THREE.DoubleSide});
+for(let i=-2;i<=2;i++){
+  const beam = new THREE.Mesh(beamsGeometry, beamsMaterial);
+  beam.position.x = i*400;
+  beam.position.y = 200;
+  beam.rotation.x = Math.PI/2.5;
+  sceneLayers.add(beam);
+}
+
+// Animate layers
+function animateLayers(){
+  requestAnimationFrame(animateLayers);
+  layers.forEach(l=>{
+    l.points.rotation.y += l.speed;
+  });
+  cameraLayers.position.x = Math.sin(Date.now()*0.00015)*200;
+  cameraLayers.position.y = Math.sin(Date.now()*0.00025)*120;
+  cameraLayers.lookAt(0,0,0);
+  rendererLayers.render(sceneLayers, cameraLayers);
+}
+animateLayers();
+
+window.addEventListener('resize',()=>{
+  cameraLayers.aspect = window.innerWidth/window.innerHeight;
+  cameraLayers.updateProjectionMatrix();
+  rendererLayers.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
