@@ -117,6 +117,7 @@ body{overflow-x:hidden;position:relative;}
 </section>
 
 <section class="elite-section section-reveal">
+    <h3 style="text-align: center; color: #7ce7ff;">اظغط على صورة لتعرف رقم شخصية لتواصل معه</h3>
   <div class="elite-grid">
     <article class="elite-card">
       <div class="elite-glow"></div>
@@ -311,6 +312,71 @@ window.addEventListener('resize',()=>{
   cameraLayers.aspect = window.innerWidth/window.innerHeight;
   cameraLayers.updateProjectionMatrix();
   rendererLayers.setSize(window.innerWidth, window.innerHeight);
+});
+document.addEventListener("DOMContentLoaded", () => {
+
+  // تعريف الأرقام لكل شخص
+  const contacts = {
+    "ساكاموتو": "+212713443606",
+    "غوجو": "+213696442686",
+    "ايدا": "+971585062872",
+    "توجي": "+212693864590"
+  };
+
+  // إنشاء div للـ tooltip
+  const tooltip = document.createElement("div");
+  tooltip.id = "contact-tooltip";
+  tooltip.style.position = "fixed";
+  tooltip.style.padding = "12px 16px";
+  tooltip.style.background = "rgba(0,0,0,0.85)";
+  tooltip.style.color = "#fff";
+  tooltip.style.borderRadius = "10px";
+  tooltip.style.display = "none";
+  tooltip.style.fontSize = "16px";
+  tooltip.style.cursor = "pointer";
+  tooltip.style.zIndex = "9999";
+  tooltip.style.display = "flex";
+  tooltip.style.alignItems = "center";
+  tooltip.style.gap = "10px";
+  tooltip.style.boxShadow = "0 10px 40px rgba(0,0,0,0.6)";
+
+  // أيقونة WhatsApp
+  const whatsappIcon = document.createElement("img");
+  whatsappIcon.src = "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"; // logo WhatsApp
+  whatsappIcon.style.width = "24px";
+  whatsappIcon.style.height = "24px";
+
+  tooltip.appendChild(whatsappIcon);
+  document.body.appendChild(tooltip);
+
+  // التعامل مع كل card
+  document.querySelectorAll(".elite-card").forEach(card => {
+    card.addEventListener("click", (e) => {
+      const name = card.querySelector(".elite-rank").innerText;
+      const number = contacts[name];
+      if(!number) return;
+
+      tooltip.innerHTML = `<img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:24px;height:24px;"> ${number}`;
+      tooltip.style.display = "flex";
+
+      // موقع tooltip قريب من الماوس
+      tooltip.style.top = `${e.clientY + 15}px`;
+      tooltip.style.left = `${e.clientX + 15}px`;
+
+      // عند الضغط على tooltip يفتح WhatsApp
+      tooltip.onclick = () => {
+        window.open(`https://wa.me/${number.replace(/\D/g,'')}`, "_blank");
+      };
+    });
+  });
+
+  // إخفاء tooltip عند الضغط في أي مكان خارج
+  window.addEventListener("click", (e) => {
+    if(!e.target.closest(".elite-card") && !e.target.closest("#contact-tooltip")){
+      tooltip.style.display = "none";
+    }
+  });
+
 });
 </script>
 </body>
